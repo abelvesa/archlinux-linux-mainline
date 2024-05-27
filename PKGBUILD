@@ -4,10 +4,10 @@
 # Based on the linux package by:
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
-pkgbase=linux-mainline               # Build stock -ARCH kernel
+pkgbase=linux-mainline
 #pkgbase=linux-custom       # Build kernel with a different name
-_tag=v6.9
-pkgver=6.9
+_tag=v6.10-rc1
+pkgver=6.10rc1
 pkgrel=1
 pkgdesc="Linux Mainline"
 arch=(x86_64)
@@ -46,8 +46,7 @@ validpgpkeys=(
   647F28654894E3BD457199BE38DBBDC86092693E  # Greg Kroah-Hartman
   83BC8889351B5DEBBB68416EB8AC08600F108CDF  # Jan Alexander Steffens (heftig)
 )
-sha256sums=('0ac1ad026d8eba3a745239e50259b8c4b78892b3c30d742cb1ed5b6988512519'
-            'bf33bb233f852dd27cd9970c348987aa32325d695c22e7a793f4dfbd8fd6dc4c')
+sha256sums=(SKIP 'bf33bb233f852dd27cd9970c348987aa32325d695c22e7a793f4dfbd8fd6dc4c')
 
 export KBUILD_BUILD_HOST=archlinux
 export KBUILD_BUILD_USER=$pkgbase
