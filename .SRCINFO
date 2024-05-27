@@ -20,15 +20,15 @@ pkgbase = linux-mainline
 	makedepends = python-sphinx
 	makedepends = python-yaml
 	makedepends = texlive-latexextra
-	options = !strip
 	options = !debug
+	options = !strip
 	source = linux-mainline::git+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git#tag=v6.9
 	source = config
 	validpgpkeys = ABAF11C65A2970B130ABE3C479BE3E4300411886
 	validpgpkeys = 647F28654894E3BD457199BE38DBBDC86092693E
-	validpgpkeys = A2FF3A36AAA56654109064AB19802F8B0D70FC30
-	sha256sums = SKIP
-	sha256sums = c2b00c84c4b543db431e06604d939a62f93107d18369f4d9860dc8062b01ab45
+	validpgpkeys = 83BC8889351B5DEBBB68416EB8AC08600F108CDF
+	sha256sums = 0ac1ad026d8eba3a745239e50259b8c4b78892b3c30d742cb1ed5b6988512519
+	sha256sums = bf33bb233f852dd27cd9970c348987aa32325d695c22e7a793f4dfbd8fd6dc4c
 
 pkgname = linux-mainline
 	pkgdesc = The Linux Mainline kernel and modules
@@ -40,6 +40,8 @@ pkgname = linux-mainline
 	provides = KSMBD-MODULE
 	provides = VIRTUALBOX-GUEST-MODULES
 	provides = WIREGUARD-MODULE
+	replaces = virtualbox-guest-modules-arch
+	replaces = wireguard-arch
 
 pkgname = linux-mainline-headers
 	pkgdesc = Headers and scripts for building modules for the Linux Mainline kernel
