@@ -10,7 +10,10 @@ _tag=v7.1-rc3
 pkgver=7.1rc3
 pkgrel=1
 pkgdesc="Linux Mainline"
-arch=(x86_64)
+arch=(
+  aarch64
+  x86_64
+)
 url="https://kernel.org/"
 license=(GPL-2.0-only)
 makedepends=(
@@ -49,19 +52,29 @@ options=(
 _srcname=linux-mainline
 source=(
   "$_srcname::git+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git#tag=$_tag"
-  config.x86_64         # the main kernel config file
 )
+source_x86_64=(config.x86_64)
+source_aarch64=(config.aarch64)
 validpgpkeys=(
   ABAF11C65A2970B130ABE3C479BE3E4300411886  # Linus Torvalds
   647F28654894E3BD457199BE38DBBDC86092693E  # Greg Kroah-Hartman
   83BC8889351B5DEBBB68416EB8AC08600F108CDF  # Jan Alexander Steffens (heftig)
 )
-sha256sums=('311a506dc0ba64abd5d3ee0b85690e77fe20b52efd496124825c8b8a901b6cc4'
-            '3a0d5641f9a65d6425823ce0dbf75ec102fbd9c4c8cfbdaac6dc6da864184e3e')
+sha256sums=('311a506dc0ba64abd5d3ee0b85690e77fe20b52efd496124825c8b8a901b6cc4')
+sha256sums_aarch64=('755cc0fde89a3e1f106fce4378ec308631faae7a1e6f76896b06ed3803513ea0')
+sha256sums_x86_64=('3a0d5641f9a65d6425823ce0dbf75ec102fbd9c4c8cfbdaac6dc6da864184e3e')
 
 export KBUILD_BUILD_HOST=archlinux
 export KBUILD_BUILD_USER=$pkgbase
 export KBUILD_BUILD_TIMESTAMP="$(date -Ru${SOURCE_DATE_EPOCH:+d @$SOURCE_DATE_EPOCH})"
+
+_kernel_make_args() {
+  case $CARCH in
+    aarch64) echo "ARCH=arm64" ;;
+    x86_64) echo "" ;;
+    *) echo "Unknown CARCH $CARCH" >&2; exit 1 ;;
+  esac
+}
 
 prepare() {
   cd $_srcname
@@ -80,20 +93,24 @@ prepare() {
     patch -Np1 < "../$src"
   done
 
+  local -a make_args=()
+  read -ra make_args <<< "$(_kernel_make_args)"
+
   echo "Setting config..."
   cp ../config.$CARCH .config
-  make olddefconfig
+  make "${make_args[@]}" olddefconfig
   diff -u ../config.$CARCH .config || :
 
-  make -s kernelrelease > version
+  make "${make_args[@]}" -s kernelrelease > version
   echo "Prepared $pkgbase version $(<version)"
 }
 
 build() {
   cd $_srcname
-  make all
-  make -C tools/bpf/bpftool vmlinux.h feature-clang-bpf-co-re=1
-  make htmldocs SPHINXOPTS=-QT
+  local -a make_args=()
+  read -ra make_args <<< "$(_kernel_make_args)"
+  make "${make_args[@]}" all
+  make -C tools/bpf/bpftool "${make_args[@]}" vmlinux.h feature-clang-bpf-co-re=1
 }
 
 _package() {
@@ -109,6 +126,9 @@ _package() {
     'scx-scheds: to use sched-ext schedulers'
     'wireless-regdb: to set the correct wireless channels of your country'
   )
+  optdepends_aarch64=(
+    "$pkgbase-dtbs: device tree binaries"
+  )
   provides=(
     KSMBD-MODULE
     NTSYNC-MODULE
@@ -122,21 +142,23 @@ _package() {
 
   cd $_srcname
   local modulesdir="$pkgdir/usr/lib/modules/$(<version)"
+  local -a make_args=()
+  read -ra make_args <<< "$(_kernel_make_args)"
 
   echo "Installing boot image..."
   # systemd expects to find the kernel here to allow hibernation
   # https://github.com/systemd/systemd/commit/edda44605f06a41fb86b7ab8128dcf99161d2344
-  install -Dm644 "$(make -s image_name)" "$modulesdir/vmlinuz"
+  install -Dm644 "$(make "${make_args[@]}" -s image_name)" "$modulesdir/vmlinuz"
 
   # Used by mkinitcpio to name the kernel
   echo "$pkgbase" | install -Dm644 /dev/stdin "$modulesdir/pkgbase"
 
   echo "Installing modules..."
-  ZSTD_CLEVEL=19 make INSTALL_MOD_PATH="$pkgdir/usr" INSTALL_MOD_STRIP=1 \
+  ZSTD_CLEVEL=19 make "${make_args[@]}" INSTALL_MOD_PATH="$pkgdir/usr" INSTALL_MOD_STRIP=1 \
     DEPMOD=/doesnt/exist modules_install  # Suppress depmod
 
   # remove build link
-  rm "$modulesdir"/build
+  rm -f "$modulesdir"/build
 }
 
 _package-headers() {
@@ -159,6 +181,7 @@ _package-headers() {
 
   local karch
   case $CARCH in
+    aarch64) karch=arm64 ;;
     x86_64) karch=x86 ;;
     *) echo "Unknown CARCH $CARCH"; exit 1 ;;
   esac
@@ -270,10 +293,23 @@ _package-docs() {
   ln -sr "$builddir/Documentation" "$pkgdir/usr/share/doc/$pkgbase"
 }
 
+_package-dtbs() {
+  pkgdesc="Device tree binaries for the $pkgdesc kernel"
+  arch=(aarch64)
+
+  cd $_srcname
+  local dtbdir="$pkgdir/usr/lib/dtbs"
+
+  echo "Installing device tree binaries..."
+  mkdir -p "$dtbdir"
+  make INSTALL_DTBS_PATH="$dtbdir" dtbs_install
+}
+
 pkgname=(
   "$pkgbase"
   "$pkgbase-headers"
   "$pkgbase-docs"
+  "$pkgbase-dtbs"
 )
 for _p in "${pkgname[@]}"; do
   eval "package_$_p() {

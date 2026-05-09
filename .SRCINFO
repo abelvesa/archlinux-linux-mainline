@@ -3,6 +3,7 @@ pkgbase = linux-mainline
 	pkgver = 7.1rc3
 	pkgrel = 1
 	url = https://kernel.org/
+	arch = aarch64
 	arch = x86_64
 	license = GPL-2.0-only
 	makedepends = bc
@@ -33,12 +34,14 @@ pkgbase = linux-mainline
 	options = !debug
 	options = !strip
 	source = linux-mainline::git+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git#tag=v7.1-rc3
-	source = config.x86_64
 	validpgpkeys = ABAF11C65A2970B130ABE3C479BE3E4300411886
 	validpgpkeys = 647F28654894E3BD457199BE38DBBDC86092693E
 	validpgpkeys = 83BC8889351B5DEBBB68416EB8AC08600F108CDF
 	sha256sums = 311a506dc0ba64abd5d3ee0b85690e77fe20b52efd496124825c8b8a901b6cc4
-	sha256sums = 3a0d5641f9a65d6425823ce0dbf75ec102fbd9c4c8cfbdaac6dc6da864184e3e
+	source_aarch64 = config.aarch64
+	sha256sums_aarch64 = 755cc0fde89a3e1f106fce4378ec308631faae7a1e6f76896b06ed3803513ea0
+	source_x86_64 = config.x86_64
+	sha256sums_x86_64 = 3a0d5641f9a65d6425823ce0dbf75ec102fbd9c4c8cfbdaac6dc6da864184e3e
 
 pkgname = linux-mainline
 	pkgdesc = The Linux Mainline kernel and modules
@@ -55,6 +58,7 @@ pkgname = linux-mainline
 	provides = WIREGUARD-MODULE
 	replaces = virtualbox-guest-modules-arch
 	replaces = wireguard-arch
+	optdepends_aarch64 = linux-mainline-dtbs: device tree binaries
 
 pkgname = linux-mainline-headers
 	pkgdesc = Headers and scripts for building modules for the Linux Mainline kernel
@@ -71,3 +75,7 @@ pkgname = linux-mainline-headers
 
 pkgname = linux-mainline-docs
 	pkgdesc = Documentation for the Linux Mainline kernel
+
+pkgname = linux-mainline-dtbs
+	pkgdesc = Device tree binaries for the Linux Mainline kernel
+	arch = aarch64
